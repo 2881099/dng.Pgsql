@@ -151,7 +151,8 @@ namespace Npgsql {
 		/// 查询指定字段，返回元组或单值
 		/// </summary>
 		/// <typeparam name="T">元组或单值，如：.Aggregate&lt;(int id, string name)&gt;("id,title")，或 .Aggregate&lt;int&gt;("id")</typeparam>
-		/// <param name="field">返回的字段，用逗号分隔，如：id,name</param>
+		/// <param name="fields">返回的字段，用逗号分隔，如：id,name</param>
+		/// <param name="parms">输入参数可以是任意对象，或者NpgsqlParameter</param>
 		/// <returns></returns>
 		public List<T> Aggregate<T>(string fields, params object[] parms) {
 			string limit = string.Concat(_limit > 0 ? string.Format(" \r\nlimit {0}", _limit) : string.Empty, _skip > 0 ? string.Format(" \r\noffset {0}", _skip) : string.Empty);
