@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyName>dng.Pgsql</AssemblyName>
+    <PackageId>dng.Pgsql</PackageId>
+    <RootNamespace>dng.Pgsql</RootNamespace>
+    <Version>1.0.1</Version>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageProjectUrl>https://github.com/2881099/dng.Pgsql</PackageProjectUrl>
+    <Description>dotnetgen_postgresql生成器所需pgsql数据库基础封装</Description>
+    <RepositoryUrl>https://github.com/2881099/dng.Pgsql</RepositoryUrl>
+    <PackageTags>dotnetgen dotnet pgsql postgresql 三层 生成器</PackageTags>
+  </PropertyGroup>
+  <ItemGroup>
+	  <PackageReference Include="CSRedisCore" Version="2.1.2" />
+	  <PackageReference Include="Microsoft.Extensions.Logging" Version="2.1.0" />
+	  <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+	  <PackageReference Include="Npgsql" Version="4.0.0" />
+	  <PackageReference Include="System.Memory" Version="4.5.1" />
+	  <PackageReference Include="System.ValueTuple" Version="4.5.0" />
+	</ItemGroup>
+</Project>
