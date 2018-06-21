@@ -75,12 +75,12 @@ namespace Npgsql {
 				string name = _dals[b].GetType().Name;
 				objNames[b - 1] = string.Concat("Obj_", name[0].ToString().ToLower(), name.Substring(1));
 			}
-			if (string.IsNullOrEmpty(cacheKey)) {
+			if (expireSeconds > 0 && string.IsNullOrEmpty(cacheKey)) {
 				sql = this.ToString();
 				cacheKey = sql.Substring(sql.IndexOf(" \r\nFROM ") + 8);
 			}
 			List<object> cacheList = expireSeconds > 0 ? new List<object>() : null;
-			return CSRedis.QuickHelperBase.Cache(cacheKey, expireSeconds, () => {
+			return PSqlHelper.CacheShell(cacheKey, expireSeconds, () => {
 				List<TReturnInfo> ret = new List<TReturnInfo>();
 				if (string.IsNullOrEmpty(sql)) sql = this.ToString();
 				_exec.ExecuteReader(dr => {
@@ -104,7 +104,7 @@ namespace Npgsql {
 				}, CommandType.Text, sql, _params.ToArray());
 
 				return ret;
-			}, list => JsonConvert.SerializeObject(cacheList), cacheValue => ToListDeserialize(cacheKey, objNames));
+			}, list => JsonConvert.SerializeObject(cacheList), cacheValue => ToListDeserialize(cacheValue, objNames));
 		}
 		private List<TReturnInfo> ToListDeserialize(string cacheValue, string[] objNames) {
 			List<TReturnInfo> ret = new List<TReturnInfo>();

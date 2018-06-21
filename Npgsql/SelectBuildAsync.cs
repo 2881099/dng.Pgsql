@@ -14,12 +14,12 @@ namespace Npgsql {
 				string name = _dals[b].GetType().Name;
 				objNames[b - 1] = string.Concat("Obj_", name[0].ToString().ToLower(), name.Substring(1));
 			}
-			if (string.IsNullOrEmpty(cacheKey)) {
+			if (expireSeconds > 0 && string.IsNullOrEmpty(cacheKey)) {
 				sql = this.ToString();
 				cacheKey = sql.Substring(sql.IndexOf(" \r\nFROM ") + 8);
 			}
 			List<object> cacheList = expireSeconds > 0 ? new List<object>() : null;
-			return await CSRedis.QuickHelperBase.CacheAsync(cacheKey, expireSeconds, async () => {
+			return await PSqlHelper.CacheShellAsync(cacheKey, expireSeconds, async () => {
 				List<TReturnInfo> ret = new List<TReturnInfo>();
 				if (string.IsNullOrEmpty(sql)) sql = this.ToString();
 				await _exec.ExecuteReaderAsync(async dr => {
@@ -46,7 +46,7 @@ namespace Npgsql {
 					if (overValue.Length > 0) type.GetProperty("OverValue")?.SetValue(info, overValue, null);
 				}, CommandType.Text, sql, _params.ToArray());
 				return ret;
-			}, list => JsonConvert.SerializeObject(cacheList), cacheValue => ToListDeserialize(cacheKey, objNames));
+			}, list => JsonConvert.SerializeObject(cacheList), cacheValue => ToListDeserialize(cacheValue, objNames));
 		}
 		async public Task<List<TReturnInfo>> ToListAsync() {
 			return await this.ToListAsync(0);

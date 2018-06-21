@@ -33,10 +33,6 @@ namespace Npgsql {
 			}
 		}
 
-		public ConnectionPool(string connectionString) {
-			ConnectionString = connectionString;
-		}
-
 		private Connection2 GetFreeConnection() {
 			Connection2 conn = null;
 			if (FreeConnections.Count > 0)
@@ -57,6 +53,7 @@ namespace Npgsql {
 			return conn;
 		}
 		public Connection2 GetConnection() {
+			if (string.IsNullOrEmpty(ConnectionString)) throw new Exception("ConnectionString 未设置");
 			var conn = GetFreeConnection();
 			if (conn == null) {
 				ManualResetEventSlim wait = new ManualResetEventSlim(false);
@@ -73,6 +70,7 @@ namespace Npgsql {
 		}
 
 		async public Task<Connection2> GetConnectionAsync() {
+			if (string.IsNullOrEmpty(ConnectionString)) throw new Exception("ConnectionString 未设置");
 			var conn = GetFreeConnection();
 			if (conn == null) {
 				TaskCompletionSource<Connection2> tcs = new TaskCompletionSource<Connection2>();
