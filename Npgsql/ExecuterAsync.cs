@@ -50,11 +50,11 @@ namespace Npgsql {
 			}
 
 			if (IsTracePerformance) logtxt_dt = DateTime.Now;
-			this.Pool.ReleaseConnection(pc.conn);
+			Pool.ReleaseConnection(pc.conn);
 			if (IsTracePerformance) logtxt += $"ReleaseConnection: {DateTime.Now.Subtract(logtxt_dt).TotalMilliseconds}ms Total: {DateTime.Now.Subtract(dt).TotalMilliseconds}ms";
 			LoggerException(cmd, ex, dt, logtxt);
 		}
-		async public Task<object[][]> ExeucteArrayAsync(CommandType cmdType, string cmdText, params NpgsqlParameter[] cmdParms) {
+		async public Task<object[][]> ExecuteArrayAsync(CommandType cmdType, string cmdText, params NpgsqlParameter[] cmdParms) {
 			List<object[]> ret = new List<object[]>();
 			await ExecuteReaderAsync(async dr => {
 				object[] values = new object[dr.FieldCount];
@@ -78,7 +78,7 @@ namespace Npgsql {
 			}
 
 			if (IsTracePerformance) logtxt_dt = DateTime.Now;
-			this.Pool.ReleaseConnection(pc.conn);
+			Pool.ReleaseConnection(pc.conn);
 			if (IsTracePerformance) pc.logtxt += $"ReleaseConnection: {DateTime.Now.Subtract(logtxt_dt).TotalMilliseconds}ms Total: {DateTime.Now.Subtract(dt).TotalMilliseconds}ms";
 			LoggerException(cmd, ex, dt, pc.logtxt);
 			cmd.Parameters.Clear();
@@ -99,7 +99,7 @@ namespace Npgsql {
 			}
 
 			if (IsTracePerformance) logtxt_dt = DateTime.Now;
-			this.Pool.ReleaseConnection(pc.conn);
+			Pool.ReleaseConnection(pc.conn);
 			if (IsTracePerformance) pc.logtxt += $"ReleaseConnection: {DateTime.Now.Subtract(logtxt_dt).TotalMilliseconds}ms Total: {DateTime.Now.Subtract(dt).TotalMilliseconds}ms";
 			LoggerException(cmd, ex, dt, pc.logtxt);
 			cmd.Parameters.Clear();
@@ -124,7 +124,7 @@ namespace Npgsql {
 			if (IsTracePerformance) logtxt += $"	PrepareCommand_part1: {DateTime.Now.Subtract(dt).TotalMilliseconds}ms cmdParms: {cmdParms.Length}\r\n";
 
 			if (IsTracePerformance) dt = DateTime.Now;
-			conn = await this.Pool.GetConnectionAsync();
+			conn = await Pool.GetConnectionAsync();
 			cmd.Connection = conn.SqlConnection;
 			if (IsTracePerformance) logtxt += $"	PrepareCommand_tran==null: {DateTime.Now.Subtract(dt).TotalMilliseconds}ms\r\n";
 

@@ -19,7 +19,7 @@ namespace Npgsql {
 				cacheKey = sql.Substring(sql.IndexOf(" \r\nFROM ") + 8);
 			}
 			List<object> cacheList = expireSeconds > 0 ? new List<object>() : null;
-			return await PSqlHelper.CacheShellAsync(cacheKey, expireSeconds, async () => {
+			return await _exec.CacheShellAsync(cacheKey, expireSeconds, async () => {
 				List<TReturnInfo> ret = new List<TReturnInfo>();
 				if (string.IsNullOrEmpty(sql)) sql = this.ToString();
 				await _exec.ExecuteReaderAsync(async dr => {

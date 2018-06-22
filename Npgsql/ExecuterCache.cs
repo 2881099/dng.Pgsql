@@ -13,16 +13,13 @@ using Npgsql;
 using NpgsqlTypes;
 
 namespace Npgsql {
-	public abstract partial class PSqlHelper {
-		public static Executer Instance { get; } = new Executer();
-		public static IDistributedCache Cache { get; private set; }
-		public static IConfiguration CacheStrategy { get; private set; }
-		private static bool CacheSupportMultiRemove = false;
-		protected static void Initialization(IDistributedCache cache, IConfiguration cacheStrategy, string connectionString, ILogger log) {
-			Instance.Log = log;
-			Instance.Pool.ConnectionString = connectionString;
+	partial class Executer {
+		public IDistributedCache Cache { get; private set; }
+		private bool CacheSupportMultiRemove = false;
+		public Executer(IDistributedCache cache, string connectionString, ILogger log) {
+			Log = log;
+			Pool.ConnectionString = connectionString;
 			Cache = cache;
-			CacheStrategy = cacheStrategy;
 			if (cache != null) {
 				cache.Set("testCacheSupportMultiRemove1", new byte[] { 65 });
 				cache.Set("testCacheSupportMultiRemove2", new byte[] { 65 });
@@ -35,7 +32,7 @@ namespace Npgsql {
 		/// 循环或批量删除缓存键，项目启动时检测：Cache.Remove("key1|key2") 若成功删除 key1、key2，说明支持批量删除
 		/// </summary>
 		/// <param name="keys">缓存键[数组]</param>
-		public static void CacheRemove(params string[] keys) {
+		public void CacheRemove(params string[] keys) {
 			if (keys == null || keys.Length == 0) return;
 			if (CacheSupportMultiRemove) Cache.Remove(string.Join("|", keys));
 			else foreach (var key in keys) Cache.Remove(key);
@@ -44,71 +41,10 @@ namespace Npgsql {
 		/// 循环或批量删除缓存键，项目启动时检测：Cache.Remove("key1|key2") 若成功删除 key1、key2，说明支持批量删除
 		/// </summary>
 		/// <param name="keys">缓存键[数组]</param>
-		async public static Task CacheRemoveAsync(params string[] keys) {
+		async public Task CacheRemoveAsync(params string[] keys) {
 			if (keys == null || keys.Length == 0) return;
 			if (CacheSupportMultiRemove) await Cache.RemoveAsync(string.Join("|", keys));
 			else foreach (var key in keys) await Cache.RemoveAsync(key);
-		}
-
-		public static string Addslashes(string filter, params object[] parms) { return Executer.Addslashes(filter, parms); }
-
-		public static void ExecuteReader(Action<NpgsqlDataReader> readerHander, string cmdText, params NpgsqlParameter[] cmdParms) => Instance.ExecuteReader(readerHander, CommandType.Text, cmdText, cmdParms);
-		public static object[][] ExeucteArray(string cmdText, params NpgsqlParameter[] cmdParms) => Instance.ExeucteArray(CommandType.Text, cmdText, cmdParms);
-		public static int ExecuteNonQuery(string cmdText, params NpgsqlParameter[] cmdParms) => Instance.ExecuteNonQuery(CommandType.Text, cmdText, cmdParms);
-		public static object ExecuteScalar(string cmdText, params NpgsqlParameter[] cmdParms) => Instance.ExecuteScalar(CommandType.Text, cmdText, cmdParms);
-
-		public static Task ExecuteReaderAsync(Func<NpgsqlDataReader, Task> readerHander, string cmdText, params NpgsqlParameter[] cmdParms) => Instance.ExecuteReaderAsync(readerHander, CommandType.Text, cmdText, cmdParms);
-		public static Task<object[][]> ExeucteArrayAsync(string cmdText, params NpgsqlParameter[] cmdParms) => Instance.ExeucteArrayAsync(CommandType.Text, cmdText, cmdParms);
-		public static Task<int> ExecuteNonQueryAsync(string cmdText, params NpgsqlParameter[] cmdParms) => Instance.ExecuteNonQueryAsync(CommandType.Text, cmdText, cmdParms);
-		public static Task<object> ExecuteScalarAsync(string cmdText, params NpgsqlParameter[] cmdParms) => Instance.ExecuteScalarAsync(CommandType.Text, cmdText, cmdParms);
-
-		/// <summary>
-		/// 开启事务（不支持异步），60秒未执行完将自动提交
-		/// </summary>
-		/// <param name="handler">事务体 () => {}</param>
-		public static void Transaction(Action handler) {
-			Transaction(handler, TimeSpan.FromSeconds(60));
-		}
-		/// <summary>
-		/// 开启事务（不支持异步）
-		/// </summary>
-		/// <param name="handler">事务体 () => {}</param>
-		/// <param name="timeout">超时，未执行完将自动提交</param>
-		public static void Transaction(Action handler, TimeSpan timeout) {
-			try {
-				Instance.BeginTransaction(timeout);
-				handler();
-				Instance.CommitTransaction();
-			} catch (Exception ex) {
-				Instance.RollbackTransaction();
-				throw ex;
-			}
-		}
-		public static NpgsqlRange<T> ParseNpgsqlRange<T>(string s) { return Executer.ParseNpgsqlRange<T>(s); }
-		public static BitArray Parse1010(string _1010) { return Executer.Parse1010(_1010); }
-
-		private static DateTime dt1970 = new DateTime(1970, 1, 1);
-		private static Random rnd = new Random();
-		private static readonly int __staticMachine = ((0x00ffffff & Environment.MachineName.GetHashCode()) +
-#if NETSTANDARD1_5 || NETSTANDARD1_6
-			1
-#else
-			AppDomain.CurrentDomain.Id
-#endif
-			) & 0x00ffffff;
-		private static readonly int __staticPid = Process.GetCurrentProcess().Id;
-		private static int __staticIncrement = rnd.Next();
-		/// <summary>
-		/// 生成类似Mongodb的ObjectId有序、不重复Guid
-		/// </summary>
-		/// <returns></returns>
-		public static Guid NewMongodbId() {
-			var now = DateTime.Now;
-			var uninxtime = (int) now.Subtract(dt1970).TotalSeconds;
-			int increment = Interlocked.Increment(ref __staticIncrement) & 0x00ffffff;
-			var rand = rnd.Next(0, int.MaxValue);
-			var guid = $"{uninxtime.ToString("x8").PadLeft(8, '0')}{__staticMachine.ToString("x8").PadLeft(8, '0').Substring(2, 6)}{__staticPid.ToString("x8").PadLeft(8, '0').Substring(6, 2)}{increment.ToString("x8").PadLeft(8, '0')}{rand.ToString("x8").PadLeft(8, '0')}";
-			return Guid.Parse(guid);
 		}
 
 		/// <summary>
@@ -121,9 +57,9 @@ namespace Npgsql {
 		/// <param name="serialize">序列化函数</param>
 		/// <param name="deserialize">反序列化函数</param>
 		/// <returns></returns>
-		public static T CacheShell<T>(string key, int timeoutSeconds, Func<T> getData, Func<T, string> serialize = null, Func<string, T> deserialize = null) {
+		public T CacheShell<T>(string key, int timeoutSeconds, Func<T> getData, Func<T, string> serialize = null, Func<string, T> deserialize = null) {
 			if (timeoutSeconds <= 0) return getData();
-			if (Cache == null) throw new Exception("缓存现实 Cache 为 null");
+			if (Cache == null) throw new Exception("缓存现实 IDistributedCache 为 null");
 			var cacheValue = Cache.Get(key);
 			if (cacheValue != null) {
 				try {
@@ -149,9 +85,9 @@ namespace Npgsql {
 		/// <param name="serialize">序列化函数</param>
 		/// <param name="deserialize">反序列化函数</param>
 		/// <returns></returns>
-		public static T CacheShell<T>(string key, string field, int timeoutSeconds, Func<T> getData, Func<(T, long), string> serialize = null, Func<string, (T, long)> deserialize = null) {
+		public T CacheShell<T>(string key, string field, int timeoutSeconds, Func<T> getData, Func<(T, long), string> serialize = null, Func<string, (T, long)> deserialize = null) {
 			if (timeoutSeconds <= 0) return getData();
-			if (Cache == null) throw new Exception("缓存现实 Cache 为 null");
+			if (Cache == null) throw new Exception("缓存现实 IDistributedCache 为 null");
 			var hashkey = $"{key}:{field}";
 			var cacheValue = Cache.Get(hashkey);
 			if (cacheValue != null) {
@@ -178,9 +114,9 @@ namespace Npgsql {
 		/// <param name="serialize">序列化函数</param>
 		/// <param name="deserialize">反序列化函数</param>
 		/// <returns></returns>
-		async public static Task<T> CacheShellAsync<T>(string key, int timeoutSeconds, Func<Task<T>> getDataAsync, Func<T, string> serialize = null, Func<string, T> deserialize = null) {
+		async public Task<T> CacheShellAsync<T>(string key, int timeoutSeconds, Func<Task<T>> getDataAsync, Func<T, string> serialize = null, Func<string, T> deserialize = null) {
 			if (timeoutSeconds <= 0) return await getDataAsync();
-			if (Cache == null) throw new Exception("缓存现实 Cache 为 null");
+			if (Cache == null) throw new Exception("缓存现实 IDistributedCache 为 null");
 			var cacheValue = await Cache.GetAsync(key);
 			if (cacheValue != null) {
 				try {
@@ -206,9 +142,9 @@ namespace Npgsql {
 		/// <param name="serialize">序列化函数</param>
 		/// <param name="deserialize">反序列化函数</param>
 		/// <returns></returns>
-		async public static Task<T> CacheShellAsync<T>(string key, string field, int timeoutSeconds, Func<Task<T>> getDataAsync, Func<(T, long), string> serialize = null, Func<string, (T, long)> deserialize = null) {
+		async public Task<T> CacheShellAsync<T>(string key, string field, int timeoutSeconds, Func<Task<T>> getDataAsync, Func<(T, long), string> serialize = null, Func<string, (T, long)> deserialize = null) {
 			if (timeoutSeconds <= 0) return await getDataAsync();
-			if (Cache == null) throw new Exception("缓存现实 Cache 为 null");
+			if (Cache == null) throw new Exception("缓存现实 IDistributedCache 为 null");
 			var hashkey = $"{key}:{field}";
 			var cacheValue = await Cache.GetAsync(hashkey);
 			if (cacheValue != null) {

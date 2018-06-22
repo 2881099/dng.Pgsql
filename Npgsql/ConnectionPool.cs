@@ -10,7 +10,7 @@ namespace Npgsql {
 	/// </summary>
 	public partial class ConnectionPool {
 
-		public int MaxPoolSize = 32;
+		private int _poolsize = 50;
 		public List<Connection2> AllConnections = new List<Connection2>();
 		public Queue<Connection2> FreeConnections = new Queue<Connection2>();
 		public Queue<ManualResetEventSlim> GetConnectionQueue = new Queue<ManualResetEventSlim>();
@@ -24,11 +24,11 @@ namespace Npgsql {
 				_connectionString = value;
 				if (string.IsNullOrEmpty(_connectionString)) return;
 				Match m = Regex.Match(_connectionString, @"Maximum\s*pool\s*size\s*=\s*(\d+)", RegexOptions.IgnoreCase);
-				if (m.Success) int.TryParse(m.Groups[1].Value, out MaxPoolSize);
-				else MaxPoolSize = 32;
-				if (MaxPoolSize <= 0) MaxPoolSize = 32;
-				var initConns = new Connection2[MaxPoolSize];
-				for (var a = 0; a < MaxPoolSize; a++) initConns[a] = GetFreeConnection();
+				if (m.Success) int.TryParse(m.Groups[1].Value, out _poolsize);
+				else _poolsize = 50;
+				if (_poolsize <= 0) _poolsize = 50;
+				var initConns = new Connection2[_poolsize];
+				for (var a = 0; a < _poolsize; a++) initConns[a] = GetFreeConnection();
 				foreach (var conn in initConns) ReleaseConnection(conn);
 			}
 		}
@@ -39,9 +39,9 @@ namespace Npgsql {
 				lock (_lock)
 					if (FreeConnections.Count > 0)
 						conn = FreeConnections.Dequeue();
-			if (conn == null && AllConnections.Count < MaxPoolSize) {
+			if (conn == null && AllConnections.Count < _poolsize) {
 				lock (_lock)
-					if (AllConnections.Count < MaxPoolSize) {
+					if (AllConnections.Count < _poolsize) {
 						conn = new Connection2();
 						AllConnections.Add(conn);
 					}
