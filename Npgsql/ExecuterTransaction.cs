@@ -1,27 +1,21 @@
-﻿using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using NpgsqlTypes;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Npgsql {
 	partial class Executer {
 
-		class SqlTransaction2 {
+		class Transaction2 {
 			internal Connection2 Conn;
 			internal NpgsqlTransaction Transaction;
 			internal DateTime RunTime;
 			internal TimeSpan Timeout;
 
-			public SqlTransaction2(Connection2 conn, NpgsqlTransaction tran, TimeSpan timeout) {
+			public Transaction2(Connection2 conn, NpgsqlTransaction tran, TimeSpan timeout) {
 				Conn = conn;
 				Transaction = tran;
 				RunTime = DateTime.Now;
@@ -29,7 +23,7 @@ namespace Npgsql {
 			}
 		}
 
-		private Dictionary<int, SqlTransaction2> _trans = new Dictionary<int, SqlTransaction2>();
+		private Dictionary<int, Transaction2> _trans = new Dictionary<int, Transaction2>();
 		private object _trans_lock = new object();
 
 		public NpgsqlTransaction CurrentThreadTransaction => _trans.TryGetValue(Thread.CurrentThread.ManagedThreadId, out var conn) && conn.Transaction?.Connection != null ? conn.Transaction : null;
@@ -40,7 +34,7 @@ namespace Npgsql {
 			var tid = Thread.CurrentThread.ManagedThreadId;
 			List<string> keys = null;
 			if (key == null || key.Any() == false) return _preRemoveKeys.TryGetValue(tid, out keys) ? keys.ToArray() : new string[0];
-			Log.LogDebug($"线程{tid}事务预删除Redis {Newtonsoft.Json.JsonConvert.SerializeObject(key)}");
+			Log.LogDebug($"线程{tid}事务预删除Redis {JsonConvert.SerializeObject(key)}");
 			if (_preRemoveKeys.TryGetValue(tid, out keys) == false)
 				lock (_preRemoveKeys_lock)
 					if (_preRemoveKeys.TryGetValue(tid, out keys) == false) {
@@ -54,17 +48,14 @@ namespace Npgsql {
 		/// <summary>
 		/// 启动事务
 		/// </summary>
-		public void BeginTransaction() {
-			BeginTransaction(TimeSpan.FromSeconds(10));
-		}
 		public void BeginTransaction(TimeSpan timeout) {
 			int tid = Thread.CurrentThread.ManagedThreadId;
 			var conn = Pool.GetConnection();
-			SqlTransaction2 tran = null;
+			Transaction2 tran = null;
 
 			try {
 				if (conn.SqlConnection.State == ConnectionState.Closed) conn.SqlConnection.Open();
-				tran = new SqlTransaction2(conn, conn.SqlConnection.BeginTransaction(), timeout);
+				tran = new Transaction2(conn, conn.SqlConnection.BeginTransaction(), timeout);
 			} catch (Exception ex) {
 				Log.LogError($"数据库出错（开启事务）{ex.Message} \r\n{ex.StackTrace}");
 				throw ex;
@@ -80,13 +71,13 @@ namespace Npgsql {
 		/// </summary>
 		private void AutoCommitTransaction() {
 			if (_trans.Count > 0) {
-				SqlTransaction2[] trans = null;
+				Transaction2[] trans = null;
 				lock (_trans_lock)
 					trans = _trans.Values.Where(st2 => DateTime.Now.Subtract(st2.RunTime) > st2.Timeout).ToArray();
-				foreach (SqlTransaction2 tran in trans) CommitTransaction(true, tran);
+				foreach (Transaction2 tran in trans) CommitTransaction(true, tran);
 			}
 		}
-		private void CommitTransaction(bool isCommit, SqlTransaction2 tran) {
+		private void CommitTransaction(bool isCommit, Transaction2 tran) {
 			if (tran == null || tran.Transaction == null || tran.Transaction.Connection == null) return;
 
 			if (_trans.ContainsKey(tran.Conn.ThreadId))
@@ -94,7 +85,7 @@ namespace Npgsql {
 					if (_trans.ContainsKey(tran.Conn.ThreadId))
 						_trans.Remove(tran.Conn.ThreadId);
 
-			var removeKeys = PreRemove().Distinct().ToArray();
+			var removeKeys = PreRemove();
 			if (_preRemoveKeys.ContainsKey(tran.Conn.ThreadId))
 				lock (_preRemoveKeys_lock)
 					if (_preRemoveKeys.ContainsKey(tran.Conn.ThreadId))
@@ -125,10 +116,10 @@ namespace Npgsql {
 		public void RollbackTransaction() => CommitTransaction(false);
 
 		public void Dispose() {
-			SqlTransaction2[] trans = null;
+			Transaction2[] trans = null;
 			lock (_trans_lock)
 				trans = _trans.Values.ToArray();
-			foreach (SqlTransaction2 tran in trans) CommitTransaction(false, tran);
+			foreach (Transaction2 tran in trans) CommitTransaction(false, tran);
 		}
 
 		/// <summary>

@@ -1,16 +1,8 @@
-﻿using System;
+﻿using NpgsqlTypes;
+using System;
 using System.Collections;
-using System.Data;
 using System.Diagnostics;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using Npgsql;
-using NpgsqlTypes;
 
 namespace Npgsql {
 	partial class Executer {

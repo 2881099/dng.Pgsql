@@ -1,11 +1,5 @@
-﻿using Newtonsoft.Json;
-using NpgsqlTypes;
+﻿using NpgsqlTypes;
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
 
 public static partial class NpgsqlTypesExtensions {
 	/// <summary>

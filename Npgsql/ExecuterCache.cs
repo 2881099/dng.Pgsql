@@ -1,16 +1,10 @@
-﻿using System;
-using System.Collections;
-using System.Data;
-using System.Diagnostics;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Npgsql;
-using NpgsqlTypes;
+using System;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace Npgsql {
 	partial class Executer {
@@ -21,11 +15,16 @@ namespace Npgsql {
 			Pool.ConnectionString = connectionString;
 			Cache = cache;
 			if (cache != null) {
-				cache.Set("testCacheSupportMultiRemove1", new byte[] { 65 });
-				cache.Set("testCacheSupportMultiRemove2", new byte[] { 65 });
-				cache.Remove("testCacheSupportMultiRemove1|testCacheSupportMultiRemove2");
-				CacheSupportMultiRemove = cache.Get("testCacheSupportMultiRemove1") == null && cache.Get("testCacheSupportMultiRemove2") == null;
-				if (CacheSupportMultiRemove == false) log.LogWarning("PSqlHelper Warning: 低性能, IDistributedCache 没现实批量删除缓存 Cache.Remove(\"key1|key2\").");
+				var key1 = $"testCacheSupportMultiRemove{Guid.NewGuid().ToString("N")}";
+				var key2 = $"testCacheSupportMultiRemove{Guid.NewGuid().ToString("N")}";
+				cache.Set(key1, new byte[] { 65 });
+				cache.Set(key2, new byte[] { 65 });
+				cache.Remove($"{key1}|{key2}");
+				CacheSupportMultiRemove = cache.Get(key1) == null && cache.Get(key2) == null;
+				if (CacheSupportMultiRemove == false) {
+					log.LogWarning("PSqlHelper Warning: 低性能, IDistributedCache 没现实批量删除缓存 Cache.Remove(\"key1|key2\").");
+					CacheRemove(key1, key2);
+				}
 			}
 		}
 		/// <summary>
@@ -34,8 +33,9 @@ namespace Npgsql {
 		/// <param name="keys">缓存键[数组]</param>
 		public void CacheRemove(params string[] keys) {
 			if (keys == null || keys.Length == 0) return;
-			if (CacheSupportMultiRemove) Cache.Remove(string.Join("|", keys));
-			else foreach (var key in keys) Cache.Remove(key);
+			var keysDistinct = keys.Distinct();
+			if (CacheSupportMultiRemove) Cache.Remove(string.Join("|", keysDistinct));
+			else foreach (var key in keysDistinct) Cache.Remove(key);
 		}
 		/// <summary>
 		/// 循环或批量删除缓存键，项目启动时检测：Cache.Remove("key1|key2") 若成功删除 key1、key2，说明支持批量删除
@@ -43,8 +43,9 @@ namespace Npgsql {
 		/// <param name="keys">缓存键[数组]</param>
 		async public Task CacheRemoveAsync(params string[] keys) {
 			if (keys == null || keys.Length == 0) return;
-			if (CacheSupportMultiRemove) await Cache.RemoveAsync(string.Join("|", keys));
-			else foreach (var key in keys) await Cache.RemoveAsync(key);
+			var keysDistinct = keys.Distinct();
+			if (CacheSupportMultiRemove) await Cache.RemoveAsync(string.Join("|", keysDistinct));
+			else foreach (var key in keysDistinct) await Cache.RemoveAsync(key);
 		}
 
 		/// <summary>
