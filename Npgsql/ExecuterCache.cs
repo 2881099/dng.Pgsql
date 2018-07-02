@@ -101,9 +101,9 @@ namespace Npgsql {
 					throw;
 				}
 			}
-			var ret = getData();
-			Cache.Set(hashkey, Encoding.UTF8.GetBytes(serialize == null ? JsonConvert.SerializeObject(ret) : serialize((ret, (long) DateTime.Now.Subtract(dt1970).TotalSeconds))));
-			return ret;
+			var ret = (getData(), (long)DateTime.Now.Subtract(dt1970).TotalSeconds);
+            Cache.Set(hashkey, Encoding.UTF8.GetBytes(serialize == null ? JsonConvert.SerializeObject(ret) : serialize(ret)));
+			return ret.Item1;
 		}
 		/// <summary>
 		/// 缓存壳
@@ -158,9 +158,9 @@ namespace Npgsql {
 					throw;
 				}
 			}
-			var ret = await getDataAsync();
-			await Cache.SetAsync(hashkey, Encoding.UTF8.GetBytes(serialize == null ? JsonConvert.SerializeObject(ret) : serialize((ret, (long) DateTime.Now.Subtract(dt1970).TotalSeconds))));
-			return ret;
+			var ret = (await getDataAsync(), (long)DateTime.Now.Subtract(dt1970).TotalSeconds);
+            await Cache.SetAsync(hashkey, Encoding.UTF8.GetBytes(serialize == null ? JsonConvert.SerializeObject(ret) : serialize(ret)));
+			return ret.Item1;
 		}
 	}
 }
