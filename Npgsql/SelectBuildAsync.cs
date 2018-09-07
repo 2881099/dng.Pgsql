@@ -68,7 +68,7 @@ namespace Npgsql {
 			string where = string.IsNullOrEmpty(_where) ? string.Empty : string.Concat(" \r\nWHERE ", _where.Substring(5));
 			string having = string.IsNullOrEmpty(_groupby) ||
 							string.IsNullOrEmpty(_having) ? string.Empty : string.Concat(" \r\nHAVING ", _having.Substring(5));
-			string sql = string.Concat("SELECT ",
+			string sql = string.Concat(_select,
 				string.IsNullOrEmpty(_distinctOnFields) ? string.Empty : $"DISTINCT ON ({_distinctOnFields}) null as dgsbdo639, {_field}",
 				this.ParseCondi(fields, parms), _overField, _table, _join, _overWindow, where, _groupby, having,
 				string.IsNullOrEmpty(_distinctOnOrderby) ? _orderby : string.Concat(" \r\nORDER BY ", _distinctOnOrderby, ", ", _orderby.Substring(12)),

@@ -26,6 +26,11 @@ namespace Npgsql {
 			values.CopyTo(parms, 0);
 			return base.Where(filter.Substring(4), parms) as TLinket;
 		}
+		/// <summary>
+		/// 若使用读写分离，默认查询【从库】，使用本方法明确查询【主库】
+		/// </summary>
+		/// <returns></returns>
+		public new TLinket Master() => base.Master() as TLinket;
 		public new TLinket Count(out long count) => base.Count(out count) as TLinket;
 		public new TLinket Where(string filter, params object[] parms) => base.Where(true, filter, parms) as TLinket;
 		public new TLinket Where(bool isadd, string filter, params object[] parms) => base.Where(isadd, filter, parms) as TLinket;
@@ -64,7 +69,7 @@ namespace Npgsql {
 	}
 	public partial class SelectBuild<TReturnInfo> {
 		protected int _limit, _skip;
-		protected string _orderby, _field, _table, _join, _where, _groupby, _having, _distinctOnFields, _distinctOnOrderby, _overField, _overWindow;
+		protected string _select = "SELECT ", _orderby, _field, _table, _join, _where, _groupby, _having, _distinctOnFields, _distinctOnOrderby, _overField, _overWindow;
 		protected List<NpgsqlParameter> _params = new List<NpgsqlParameter>();
 		protected List<IDAL> _dals = new List<IDAL>();
 		protected Executer _exec;
@@ -140,7 +145,7 @@ namespace Npgsql {
 			if (string.IsNullOrEmpty(_orderby) && _skip > 0) this.Sort(_dals[0].Sort);
 			string limit = string.Concat(_limit > 0 ? string.Format(" \r\nlimit {0}", _limit) : string.Empty, _skip > 0 ? string.Format(" \r\noffset {0}", _skip) : string.Empty);
 			string where = string.IsNullOrEmpty(_where) ? string.Empty : string.Concat(" \r\nWHERE ", _where.Substring(5));
-			string sql = string.Concat("SELECT ",
+			string sql = string.Concat(_select,
 				string.IsNullOrEmpty(_distinctOnFields) ? string.Empty : $"DISTINCT ON ({_distinctOnFields}) null as dgsbdo639, {_field}",
 				field ?? _field, _overField, _table, _join, _overWindow, where,
 				string.IsNullOrEmpty(_distinctOnOrderby) ? _orderby : string.Concat(" \r\nORDER BY ", _distinctOnOrderby, ", ", _orderby.Substring(12)),
@@ -159,7 +164,7 @@ namespace Npgsql {
 			string where = string.IsNullOrEmpty(_where) ? string.Empty : string.Concat(" \r\nWHERE ", _where.Substring(5));
 			string having = string.IsNullOrEmpty(_groupby) ||
 							string.IsNullOrEmpty(_having) ? string.Empty : string.Concat(" \r\nHAVING ", _having.Substring(5));
-			string sql = string.Concat("SELECT ",
+			string sql = string.Concat(_select,
 				string.IsNullOrEmpty(_distinctOnFields) ? string.Empty : $"DISTINCT ON ({_distinctOnFields}) null as dgsbdo639, {_field}",
 				this.ParseCondi(fields, parms), _overField, _table, _join, _overWindow, where, _groupby, having,
 				string.IsNullOrEmpty(_distinctOnOrderby) ? _orderby : string.Concat(" \r\nORDER BY ", _distinctOnOrderby, ", ", _orderby.Substring(12)),
@@ -194,6 +199,10 @@ namespace Npgsql {
 				return constructor.Invoke(parms);
 			}
 			return dr.IsDBNull(++dataIndex) ? null : dr.GetValue(dataIndex);
+		}
+		protected SelectBuild<TReturnInfo> Master() {
+			_select = " SELECT "; // ExecuteReader 内会判断 StartsWith("SELECT ")，才使用从库查询
+			return this;
 		}
 		public long Count() {
 			return this.AggregateScalar<long>("count(1)");
