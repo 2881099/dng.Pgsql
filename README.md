@@ -10,19 +10,19 @@
 
 ```csharp
 public static Npgsql.Executer PgsqlInstance = 
-    new Npgsql.Executer(IDistributedCache, connectionString, ILogger);
+    new Npgsql.Executer(IDistributedCache, masterConnectionString, slaveConnectionStrings, ILogger);
 
-//PgsqlInstance.ExecuteReader
-//PgsqlInstance.ExecuteReaderAsync
+PgsqlInstance.ExecuteReader
+PgsqlInstance.ExecuteReaderAsync
 
-//ExecuteArray
-//ExecuteArrayAsync
+PgsqlInstance.ExecuteArray
+PgsqlInstance.ExecuteArrayAsync
 
-//ExecuteNonQuery
-//ExecuteNonQueryAsync
+PgsqlInstance.ExecuteNonQuery
+PgsqlInstance.ExecuteNonQueryAsync
 
-//ExecuteScalar
-//ExecuteScalarAsync
+PgsqlInstance.ExecuteScalar
+PgsqlInstance.ExecuteScalarAsync
 ```
 
 # 事务
@@ -41,4 +41,26 @@ PgsqlInstance.CacheShell(key, timeoutSeconds, () => {
 });
 
 PgsqlInstance.RemoveCache(key);
+```
+
+# 读写分离
+
+若配置了从数据库连接串，从数据库可以设置多个，访问策略为随机。从库实现了故障切换，自动恢复机制。
+
+以下方法执行 sql 语句，为 select 开头，则默认查从数据库，反之则查主数据库。
+
+PgsqlInstance.ExecuteReader
+PgsqlInstance.ExecuteReaderAsync
+
+PgsqlInstance.ExecuteArray
+PgsqlInstance.ExecuteArrayAsync
+
+以下方法在主数据库执行：
+
+```csharp
+PgsqlInstance.ExecuteNonQuery
+PgsqlInstance.ExecuteNonQueryAsync
+
+PgsqlInstance.ExecuteScalar
+PgsqlInstance.ExecuteScalarAsync
 ```
