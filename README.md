@@ -2,6 +2,8 @@
 
 也是dotnetgen_postgresql生成器所需postgresql数据库基础封装
 
+https://github.com/2881099/dotnetGen_postgresql
+
 # 安装
 
 > Install-Package dng.Pgsql
