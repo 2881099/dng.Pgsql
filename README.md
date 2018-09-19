@@ -1,4 +1,4 @@
-对 Npgsql 进行的二次封装，包含连接池、缓存
+对 Npgsql 进行的二次封装，包含连接池、事务、缓存、读写分离
 
 也是dotnetgen_postgresql生成器所需postgresql数据库基础封装
 
