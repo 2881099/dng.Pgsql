@@ -61,9 +61,9 @@ namespace Npgsql {
 				if (m.Success == false || int.TryParse(m.Groups[1].Value, out var poolsize) == false || poolsize <= 0) poolsize = 100;
 				PoolSize = poolsize;
 
-				//var initConns = new Object<NpgsqlConnection>[poolsize];
-				//for (var a = 0; a < poolsize; a++) try { initConns[a] = _pool.Get(); } catch { }
-				//foreach (var conn in initConns) _pool.Return(conn);
+				var initConns = new Object<NpgsqlConnection>[poolsize];
+				for (var a = 0; a < poolsize; a++) try { initConns[a] = _pool.Get(); } catch { }
+				foreach (var conn in initConns) _pool.Return(conn);
 			}
 		}
 
