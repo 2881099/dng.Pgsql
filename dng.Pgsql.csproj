@@ -4,7 +4,7 @@
     <AssemblyName>dng.Pgsql</AssemblyName>
     <PackageId>dng.Pgsql</PackageId>
     <RootNamespace>dng.Pgsql</RootNamespace>
-    <Version>1.1.16</Version>
+    <Version>1.1.17</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageProjectUrl>https://github.com/2881099/dng.Pgsql</PackageProjectUrl>
     <Description>dotnetgen_postgresql生成器所需pgsql数据库基础封装</Description>
@@ -24,4 +24,7 @@
 	  <PackageReference Include="System.Memory" Version="4.5.1" />
 	  <PackageReference Include="System.ValueTuple" Version="4.5.0" />
 	</ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SafeObjectPool\SafeObjectPool.csproj" />
+  </ItemGroup>
 </Project>
