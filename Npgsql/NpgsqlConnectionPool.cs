@@ -90,7 +90,7 @@ namespace Npgsql {
 
 			if (_pool.IsAvailable) {
 
-				if (DateTime.Now.Subtract(obj.LastReturnTime).TotalSeconds > 60 && obj.Value.Ping() == false) {
+				if (obj.Value.State != ConnectionState.Open || DateTime.Now.Subtract(obj.LastReturnTime).TotalSeconds > 60 && obj.Value.Ping() == false) {
 
 					try {
 						obj.Value.Open();
@@ -106,7 +106,7 @@ namespace Npgsql {
 
 			if (_pool.IsAvailable) {
 
-				if (DateTime.Now.Subtract(obj.LastReturnTime).TotalSeconds > 60 && obj.Value.Ping() == false) {
+				if (obj.Value.State != ConnectionState.Open || DateTime.Now.Subtract(obj.LastReturnTime).TotalSeconds > 60 && obj.Value.Ping() == false) {
 
 					try {
 						await obj.Value.OpenAsync();

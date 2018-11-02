@@ -141,7 +141,7 @@ namespace Npgsql {
 			int val = 0;
 			Exception ex = null;
 			try {
-				if (cmd.Connection.State == ConnectionState.Closed) await cmd.Connection.OpenAsync();
+				if (cmd.Connection == null) cmd.Connection = (conn = await this.MasterPool.GetAsync()).Value;
 				val = await cmd.ExecuteNonQueryAsync();
 			} catch (Exception ex2) {
 				ex = ex2;
@@ -172,7 +172,7 @@ namespace Npgsql {
 			object val = null;
 			Exception ex = null;
 			try {
-				if (cmd.Connection.State == ConnectionState.Closed) await cmd.Connection.OpenAsync();
+				if (cmd.Connection == null) cmd.Connection = (conn = await this.MasterPool.GetAsync()).Value;
 				val = await cmd.ExecuteScalarAsync();
 			} catch (Exception ex2) {
 				ex = ex2;
