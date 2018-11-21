@@ -4,7 +4,7 @@
     <AssemblyName>dng.Pgsql</AssemblyName>
     <PackageId>dng.Pgsql</PackageId>
     <RootNamespace>dng.Pgsql</RootNamespace>
-    <Version>1.2.1</Version>
+    <Version>1.2.2</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageProjectUrl>https://github.com/2881099/dng.Pgsql</PackageProjectUrl>
     <Description>dotnetgen_postgresql生成器所需pgsql数据库基础封装</Description>
@@ -21,7 +21,7 @@
 	  <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
 	  <PackageReference Include="Npgsql" Version="4.0.3" />
     <PackageReference Include="Npgsql.LegacyPostgis" Version="1.0.0" />
-    <PackageReference Include="SafeObjectPool" Version="1.0.11" />
+    <PackageReference Include="SafeObjectPool" Version="1.0.12" />
 	  <PackageReference Include="System.Memory" Version="4.5.1" />
 	  <PackageReference Include="System.ValueTuple" Version="4.5.0" />
 	</ItemGroup>
