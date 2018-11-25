@@ -107,6 +107,11 @@ namespace Npgsql {
 			}
 			return (await dr.IsDBNullAsync(++dataIndex) ? null : await dr.GetFieldValueAsync<object>(dataIndex), dataIndex);
 		}
+		/// <summary>
+		/// 执行SQL，若查询语句存在记录则返回 true，否则返回 false
+		/// </summary>
+		/// <returns></returns>
+		async public Task<bool> AnyAsync() => await this.AggregateScalarAsync<int>("11::int4") == 1;
 		async public Task<long> CountAsync() {
 			return await this.AggregateScalarAsync<long>("count(1)");
 		}
