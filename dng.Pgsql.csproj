@@ -4,7 +4,7 @@
     <AssemblyName>dng.Pgsql</AssemblyName>
     <PackageId>dng.Pgsql</PackageId>
     <RootNamespace>dng.Pgsql</RootNamespace>
-    <Version>1.3.2</Version>
+    <Version>1.3.3</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageProjectUrl>https://github.com/2881099/dng.Pgsql</PackageProjectUrl>
     <Description>dotnetgen_postgresql生成器所需pgsql数据库基础封装</Description>
